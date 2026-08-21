@@ -49,11 +49,11 @@
     <div id="hub-view" class="space-y-8">
       <div class="text-center max-w-2xl mx-auto space-y-3">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">모든 경제 계산을 한곳에서</h1>
-        <p class="text-slate-400 text-sm sm:text-base">실시간 환율, 복리 투자, 예적금, 대출, 연봉, 인플레이션, 물타기 계산기를 제공합니다.</p>
+        <p class="text-slate-400 text-sm sm:text-base">환율, 예적금, 대출, 연봉, 실업급여, 퇴직금 등 다양한 금융 계산기를 제공합니다.</p>
         <div class="pt-2">
           <div class="relative max-w-md mx-auto">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
-            <input type="text" id="calc-search" oninput="filterCards()" placeholder="계산기 검색 (예: 환율, 달러, 대출, 복리...)" 
+            <input type="text" id="calc-search" oninput="filterCards()" placeholder="계산기 검색 (예: 환율, 실업급여, 퇴직금, 대출...)" 
                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
           </div>
         </div>
@@ -76,6 +76,38 @@
             <p class="text-slate-400 text-xs leading-relaxed">글로벌 실시간 환율 API를 연동하여 달러(USD), 엔(JPY), 유로(EUR), 위안(CNY) 환전 금액을 즉시 환산합니다.</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs text-teal-400 font-semibold">
+            <span>실행하기</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+          </div>
+        </div>
+
+        <!-- 실업급여 계산기 (추가됨) -->
+        <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
+             data-name="실업급여 구직급여 고용보험 퇴사 실직 급여 일수 소정급여일수" onclick="openCalc('unemployment')">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+              <i class="fa-solid fa-hand-holding-dollar"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">실업급여(구직급여) 계산기</h3>
+            <p class="text-slate-400 text-xs leading-relaxed">나이, 고용보험 가입기간, 퇴사 전 3개월 평균 급여를 바탕으로 예상 실업급여 지급액과 일수를 산출합니다.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs text-sky-400 font-semibold">
+            <span>실행하기</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+          </div>
+        </div>
+
+        <!-- 퇴직금 계산기 (추가됨) -->
+        <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
+             data-name="퇴직금 퇴직연금 근로기준법 퇴사 1일평균임금 근속연수" onclick="openCalc('severance')">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white mb-1">퇴직금 계산기</h3>
+            <p class="text-slate-400 text-xs leading-relaxed">입사일과 퇴사일, 최근 3개월 기본급 및 연간 상여금/연차수당을 기반으로 근로기준법상 예상 퇴직금을 계산합니다.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs text-indigo-400 font-semibold">
             <span>실행하기</span>
             <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
           </div>
@@ -194,7 +226,7 @@
   </main>
 
   <footer class="border-t border-slate-900 py-6 text-center text-xs text-slate-600">
-    moki &copy; 2026. 본 계산 결과는 단순 모의 산출용이며 실제 금융기관 정산과 오차가 있을 수 있습니다.
+    moki &copy; 2026. 본 계산 결과는 단순 모의 산출용이며 실제 고용노동부 및 금융기관 정산과 오차가 있을 수 있습니다.
   </footer>
 
   <script>
@@ -317,6 +349,116 @@
           </div>
         `;
         fetchRates();
+      } else if (type === 'unemployment') {
+        container.innerHTML = `
+          <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-hand-holding-dollar text-sky-400 mr-2"></i>실업급여(구직급여) 계산기</h2>
+          <p class="text-slate-400 text-xs mb-6">고용보험 가입기간 및 퇴직 전 평균임금에 따른 실업급여 모의 계산</p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div>
+                <label class="text-xs text-slate-400">퇴사 당시 만나이</label>
+                <select id="ue-age" class="input-style">
+                  <option value="under50">만 50세 미만</option>
+                  <option value="over50">만 50세 이상 및 장애인</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">고용보험 가입 기간</label>
+                <select id="ue-period" class="input-style">
+                  <option value="1">1년 미만 (최소 180일 이상)</option>
+                  <option value="3" selected>1년 이상 ~ 3년 미만</option>
+                  <option value="5">3년 이상 ~ 5년 미만</option>
+                  <option value="10">5년 이상 ~ 10년 미만</option>
+                  <option value="11">10년 이상</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">퇴사 전 3개월 월 평균 급여 (세전, 원)</label>
+                <input type="number" id="ue-salary" value="3000000" step="100000" class="input-style">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">1일 소정 근로시간</label>
+                <select id="ue-hours" class="input-style">
+                  <option value="8" selected>8시간 (일반적)</option>
+                  <option value="7">7시간</option>
+                  <option value="6">6시간</option>
+                  <option value="5">5시간</option>
+                  <option value="4">4시간 이하</option>
+                </select>
+              </div>
+              <button onclick="runUnemployment()" class="btn-style bg-sky-500 hover:bg-sky-600">계산하기</button>
+            </div>
+            <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+              <div>
+                <p class="text-xs text-slate-400">총 예상 실업급여 수급액</p>
+                <p id="ue-res-total" class="text-2xl font-bold text-sky-400">0 원</p>
+                <div class="mt-4 pt-3 border-t border-slate-800 space-y-1.5 text-xs">
+                  <p class="flex justify-between text-slate-400">소정 급여 일수: <span id="ue-res-days" class="text-white font-semibold">0 일</span></p>
+                  <p class="flex justify-between text-slate-400">1일 구직급여액: <span id="ue-res-daily" class="text-white">0 원</span></p>
+                  <p class="flex justify-between text-slate-400">월 환산 수급액(30일): <span id="ue-res-month" class="text-sky-300">0 원</span></p>
+                </div>
+              </div>
+              <div class="mt-4"><canvas id="chart-canvas" height="150"></canvas></div>
+            </div>
+          </div>
+        `;
+        runUnemployment();
+      } else if (type === 'severance') {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const endStr = `${yyyy}-${mm}-${dd}`;
+        const startStr = `${yyyy - 3}-${mm}-${dd}`;
+
+        container.innerHTML = `
+          <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-file-invoice-dollar text-indigo-400 mr-2"></i>퇴직금 계산기</h2>
+          <p class="text-slate-400 text-xs mb-6">근로기준법 기준 1일 평균임금 및 근속기간에 따른 예상 퇴직금</p>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-xs text-slate-400">입사일</label>
+                  <input type="date" id="sev-start" value="${startStr}" class="input-style text-slate-300">
+                </div>
+                <div>
+                  <label class="text-xs text-slate-400">퇴사일</label>
+                  <input type="date" id="sev-end" value="${endStr}" class="input-style text-slate-300">
+                </div>
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">퇴직 전 3개월 기본급 합계 (원)</label>
+                <input type="number" id="sev-base" value="9000000" step="100000" class="input-style">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">퇴직 전 3개월 기타수당 합계 (원)</label>
+                <input type="number" id="sev-allowance" value="600000" step="50000" class="input-style">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">연간 상여금 총액 (원)</label>
+                <input type="number" id="sev-bonus" value="3000000" step="500000" class="input-style">
+              </div>
+              <div>
+                <label class="text-xs text-slate-400">연차유급휴가 미사용 수당 (원)</label>
+                <input type="number" id="sev-annual" value="500000" step="100000" class="input-style">
+              </div>
+              <button onclick="runSeverance()" class="btn-style bg-indigo-500 hover:bg-indigo-600 mt-2">계산하기</button>
+            </div>
+            <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 flex flex-col justify-between">
+              <div>
+                <p class="text-xs text-slate-400">예상 퇴직금 (세전)</p>
+                <p id="sev-res-total" class="text-2xl font-bold text-indigo-400">0 원</p>
+                <div class="mt-4 pt-3 border-t border-slate-800 space-y-1.5 text-xs">
+                  <p class="flex justify-between text-slate-400">총 재직일수: <span id="sev-res-days" class="text-white">0 일</span></p>
+                  <p class="flex justify-between text-slate-400">1일 평균임금: <span id="sev-res-daily" class="text-indigo-300">0 원</span></p>
+                  <p class="flex justify-between text-slate-400">근속 연수: <span id="sev-res-years" class="text-white">0 년</span></p>
+                </div>
+              </div>
+              <div class="mt-4"><canvas id="chart-canvas" height="150"></canvas></div>
+            </div>
+          </div>
+        `;
+        runSeverance();
       } else if (type === 'compound') {
         container.innerHTML = `
           <h2 class="text-2xl font-bold text-white mb-1"><i class="fa-solid fa-chart-line text-emerald-400 mr-2"></i>복리 투자 시뮬레이터</h2>
@@ -508,7 +650,6 @@
           const updateEl = document.getElementById('ex-updated');
           if (updateEl) updateEl.innerText = dateStr;
 
-          // 시세 위젯 표시
           const krwEl = document.getElementById('rate-usd-krw');
           if (krwEl) krwEl.innerText = Math.round(data.rates.KRW).toLocaleString() + '원';
           const jpyEl = document.getElementById('rate-usd-jpy');
@@ -533,7 +674,6 @@
       const to = document.getElementById('ex-to').value;
       const amt = parseFloat(document.getElementById('ex-amt').value) || 0;
 
-      // USD 기준 환산: amt in FROM -> USD -> in TO
       const fromRateToUSD = exchangeRatesCache[from];
       const toRateToUSD = exchangeRatesCache[to];
 
@@ -560,6 +700,75 @@
         data: { labels, datasets: [{ data, backgroundColor: bgColors, borderWidth: 0 }] },
         options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } } }
       });
+    }
+
+    // 실업급여 계산 로직
+    function runUnemployment() {
+      const ageType = document.getElementById('ue-age').value;
+      const period = parseInt(document.getElementById('ue-period').value) || 1;
+      const salary = parseFloat(document.getElementById('ue-salary').value) || 0;
+      const hours = parseInt(document.getElementById('ue-hours').value) || 8;
+
+      let days = 120;
+      if (ageType === 'under50') {
+        if (period === 1) days = 120;
+        else if (period === 3) days = 150;
+        else if (period === 5) days = 180;
+        else if (period === 10) days = 210;
+        else days = 240;
+      } else {
+        if (period === 1) days = 120;
+        else if (period === 3) days = 180;
+        else if (period === 5) days = 210;
+        else if (period === 10) days = 240;
+        else days = 270;
+      }
+
+      const dailyAvgWage = (salary / 30);
+      let calculatedDaily = dailyAvgWage * 0.6;
+      
+      const maxDaily = 66000;
+      const minDaily = Math.round(9860 * 0.8 * hours);
+
+      let finalDaily = Math.max(minDaily, Math.min(maxDaily, calculatedDaily));
+      const totalAmount = finalDaily * days;
+      const monthlyEst = finalDaily * 30;
+
+      document.getElementById('ue-res-total').innerText = Math.round(totalAmount).toLocaleString() + ' 원';
+      document.getElementById('ue-res-days').innerText = days + ' 일';
+      document.getElementById('ue-res-daily').innerText = Math.round(finalDaily).toLocaleString() + ' 원';
+      document.getElementById('ue-res-month').innerText = Math.round(monthlyEst).toLocaleString() + ' 원';
+
+      drawDoughnut(['지급 실업급여', '월 예상 수령액 (30일분)'], [Math.round(totalAmount), Math.round(monthlyEst)], ['#0284c7', '#38bdf8']);
+    }
+
+    // 퇴직금 계산 로직
+    function runSeverance() {
+      const sDate = new Date(document.getElementById('sev-start').value);
+      const eDate = new Date(document.getElementById('sev-end').value);
+      const base = parseFloat(document.getElementById('sev-base').value) || 0;
+      const allowance = parseFloat(document.getElementById('sev-allowance').value) || 0;
+      const bonus = parseFloat(document.getElementById('sev-bonus').value) || 0;
+      const annual = parseFloat(document.getElementById('sev-annual').value) || 0;
+
+      const diffTime = eDate - sDate;
+      const days = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      const years = (days / 365).toFixed(1);
+
+      // 3개월 일수 92일 기준
+      const baseDailyWage = (base + allowance) / 92;
+      const bonusDailyWage = (bonus * 3 / 12) / 92;
+      const annualDailyWage = (annual * 3 / 12) / 92;
+      const dailyAvgWage = baseDailyWage + bonusDailyWage + annualDailyWage;
+
+      const severance = (dailyAvgWage * 30 * (days / 365));
+
+      document.getElementById('sev-res-total').innerText = Math.round(severance).toLocaleString() + ' 원';
+      document.getElementById('sev-res-days').innerText = days.toLocaleString() + ' 일';
+      document.getElementById('sev-res-daily').innerText = Math.round(dailyAvgWage).toLocaleString() + ' 원';
+      document.getElementById('sev-res-years').innerText = years + ' 년';
+
+      drawDoughnut(['기본급여 기여분', '상여/수당 기여분'], [Math.round(baseDailyWage * 30 * (days / 365)), Math.max(0, Math.round((bonusDailyWage + annualDailyWage) * 30 * (days / 365)))], ['#4f46e5', '#818cf8']);
     }
 
     function runCompound() {
