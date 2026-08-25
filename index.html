@@ -53,7 +53,7 @@
         <div class="pt-2">
           <div class="relative max-w-md mx-auto">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
-            <input type="text" id="calc-search" oninput="filterCards()" placeholder="계산기 검색 (예: 환율, 실업급여, 퇴직금, 대출...)" 
+            <input type="text" id="calc-search" oninput="filterCards()" placeholder="계산기 검색 (예: 뉴스, 환율, 실업급여, 퇴직금, 대출...)" 
                    class="w-full bg-slate-900 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
           </div>
         </div>
@@ -62,6 +62,25 @@
       <!-- 카드 그리드 -->
       <div id="calc-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
         
+        <!-- [신규 카드] 오늘의 금융 뉴스 브리핑 -->
+        <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
+             data-name="뉴스 기사 금융 경제 증시 시황 데일리 브리핑 요약" onclick="openCalc('news')">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
+              <i class="fa-solid fa-newspaper"></i>
+            </div>
+            <div class="flex items-center gap-2 mb-1">
+              <h3 class="text-lg font-bold text-white">오늘의 금융 뉴스 브리핑</h3>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-semibold">DAILY</span>
+            </div>
+            <p class="text-slate-400 text-xs leading-relaxed">매일 아침 주요 금융·경제 이슈와 핵심 헤드라인 요약을 한눈에 확인합니다.</p>
+          </div>
+          <div class="mt-6 flex items-center justify-between text-xs text-emerald-400 font-semibold">
+            <span>브리핑 읽기</span>
+            <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+          </div>
+        </div>
+
         <!-- 실시간 환율 계산기 -->
         <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
              data-name="실시간 환율 외환 달러 엔화 유로 위안 환전 외화 통화" onclick="openCalc('exchange')">
@@ -81,7 +100,7 @@
           </div>
         </div>
 
-        <!-- 실업급여 계산기 (추가됨) -->
+        <!-- 실업급여 계산기 -->
         <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
              data-name="실업급여 구직급여 고용보험 퇴사 실직 급여 일수 소정급여일수" onclick="openCalc('unemployment')">
           <div>
@@ -97,7 +116,7 @@
           </div>
         </div>
 
-        <!-- 퇴직금 계산기 (추가됨) -->
+        <!-- 퇴직금 계산기 -->
         <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
              data-name="퇴직금 퇴직연금 근로기준법 퇴사 1일평균임금 근속연수" onclick="openCalc('severance')">
           <div>
@@ -212,10 +231,10 @@
       </div>
     </div>
 
-    <!-- 2. 개별 계산기 화면 뷰 -->
+    <!-- 2. 개별 계산기 및 콘텐츠 화면 뷰 -->
     <div id="calc-detail-view" class="hidden space-y-6">
       <button onclick="showHub()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 font-medium transition">
-        <i class="fa-solid fa-arrow-left"></i> 계산기 목록으로 돌아가기
+        <i class="fa-solid fa-arrow-left"></i> 목록으로 돌아가기
       </button>
 
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 max-w-4xl mx-auto shadow-2xl">
@@ -258,10 +277,49 @@
       }
     }
 
-    function openCalc(type) {
+    async function openCalc(type) {
       document.getElementById('hub-view').classList.add('hidden');
       document.getElementById('calc-detail-view').classList.remove('hidden');
       const container = document.getElementById('calc-content');
+
+      // [뉴스 브리핑] -> news.html 파일을 비동기로 불러와 렌더링
+      if (type === 'news') {
+        const todayDate = new Date().toISOString().slice(0, 10);
+        container.innerHTML = `
+          <div class="border-b border-slate-800 pb-5 mb-6">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xs bg-emerald-500/20 text-emerald-400 font-mono font-semibold px-2 py-0.5 rounded">DAILY BRIEFING</span>
+              <span class="text-xs text-slate-500">기준일: <span id="news-date">${todayDate}</span></span>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-white"><i class="fa-solid fa-newspaper text-emerald-400 mr-2"></i>오늘의 주요 금융·경제 브리핑</h2>
+            <p class="text-slate-400 text-xs mt-1">매일 업데이트되는 핵심 경제 이슈 및 글로벌 증시·외환 시황 요약</p>
+          </div>
+          <div id="news-body-wrapper" class="news-content-style">
+            <p class="text-slate-500 text-sm">기사를 불러오는 중입니다...</p>
+          </div>
+        `;
+
+        try {
+          // 캐시 방지를 위해 타임스탬프를 덧붙여 news.html 가져옴
+          const res = await fetch('news.html?t=' + new Date().getTime());
+          if (res.ok) {
+            const html = await res.text();
+            document.getElementById('news-body-wrapper').innerHTML = html;
+          } else {
+            document.getElementById('news-body-wrapper').innerHTML = `
+              <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-sm">
+                <p>아직 등록된 <code>news.html</code> 파일이 없거나 기사를 불러올 수 없습니다.</p>
+                <p class="text-xs text-slate-500 mt-1">같은 폴더에 <code>news.html</code> 파일을 생성해 기사 HTML을 넣어주세요.</p>
+              </div>
+            `;
+          }
+        } catch (e) {
+          document.getElementById('news-body-wrapper').innerHTML = `
+            <p class="text-rose-400 text-xs">뉴스 파일을 불러오는 중 오류가 발생했습니다.</p>
+          `;
+        }
+        return;
+      }
 
       if (type === 'exchange') {
         container.innerHTML = `
@@ -632,7 +690,7 @@
       }
     }
 
-    // --- 실시간 환율 API 로직 ---
+    // 실시간 환율 API 로직
     async function fetchRates(force = false) {
       if (!force && exchangeRatesCache) {
         runExchange();
@@ -755,7 +813,6 @@
       const days = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
       const years = (days / 365).toFixed(1);
 
-      // 3개월 일수 92일 기준
       const baseDailyWage = (base + allowance) / 92;
       const bonusDailyWage = (bonus * 3 / 12) / 92;
       const annualDailyWage = (annual * 3 / 12) / 92;
@@ -910,6 +967,75 @@
       border-radius: 0.5rem;
       color: #020617;
       transition: all 0.2s;
+    }
+
+    /* 티스토리/블로그 HTML 서식 스타일 */
+    .news-content-style {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.8;
+    }
+    .news-content-style h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #334155;
+    }
+    .news-content-style h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #38bdf8;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .news-content-style p {
+      margin-bottom: 1rem;
+    }
+    .news-content-style .summary-lead {
+      font-size: 1.05rem;
+      color: #94a3b8;
+      margin-bottom: 1.25rem;
+    }
+    .news-content-style blockquote {
+      border-left: 4px solid #10b981;
+      background-color: #020617;
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+      border-radius: 0 0.5rem 0.5rem 0;
+      color: #e2e8f0;
+    }
+    .news-content-style ul, .news-content-style ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      list-style-type: disc;
+    }
+    .news-content-style li {
+      margin-bottom: 0.35rem;
+    }
+    .news-content-style a {
+      color: #38bdf8;
+      text-decoration: underline;
+    }
+    .news-content-style strong {
+      color: #ffffff;
+    }
+    .news-content-style table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.875rem;
+    }
+    .news-content-style th, .news-content-style td {
+      border: 1px solid #334155;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+    }
+    .news-content-style th {
+      background-color: #0f172a;
+      color: #ffffff;
     }
   </style>
 </body>
