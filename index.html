@@ -21,25 +21,140 @@
   <style>
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
   <!-- 상단 네비게이션 -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3 cursor-pointer" onclick="showHub()">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">₩</div>
-        <div>
-          <span class="font-bold text-lg text-white">moki</span>
-          <span class="text-xs text-emerald-400 block -mt-1 font-mono">ECONOMIC CALCULATOR</span>
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="h-16 flex items-center justify-between">
+        
+        <!-- 로고 -->
+        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="showHub()">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">₩</div>
+          <div>
+            <span class="font-bold text-lg text-white">moki</span>
+            <span class="text-xs text-emerald-400 block -mt-1 font-mono">FINANCE PORTAL</span>
+          </div>
         </div>
+
+        <!-- PC 네비게이션 드롭다운 메뉴 -->
+        <nav class="hidden md:flex items-center gap-1 text-sm font-medium text-slate-300">
+          
+          <button onclick="showHub()" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-house text-xs text-slate-400"></i> 홈
+          </button>
+
+          <!-- 드롭다운 1: 데일리 & 외환 -->
+          <div class="relative group">
+            <button class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center gap-1">
+              <span>뉴스·환율</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 group-hover:rotate-180 transition-transform"></i>
+            </button>
+            <div class="absolute left-0 mt-1 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 hidden group-hover:block z-50">
+              <button onclick="openCalc('news')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-newspaper text-emerald-400 w-4"></i> 금융 뉴스 브리핑
+              </button>
+              <button onclick="openCalc('exchange')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-teal-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-money-bill-transfer text-teal-400 w-4"></i> 실시간 환율 계산기
+              </button>
+            </div>
+          </div>
+
+          <!-- 드롭다운 2: 급여 & 노무 -->
+          <div class="relative group">
+            <button class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center gap-1">
+              <span>급여·퇴직</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 group-hover:rotate-180 transition-transform"></i>
+            </button>
+            <div class="absolute left-0 mt-1 w-48 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 hidden group-hover:block z-50">
+              <button onclick="openCalc('salary')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-amber-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-wallet text-amber-400 w-4"></i> 연봉 실수령액 계산기
+              </button>
+              <button onclick="openCalc('unemployment')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-sky-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-hand-holding-dollar text-sky-400 w-4"></i> 실업급여 계산기
+              </button>
+              <button onclick="openCalc('severance')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-indigo-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar text-indigo-400 w-4"></i> 퇴직금 계산기
+              </button>
+            </div>
+          </div>
+
+          <!-- 드롭다운 3: 자산 & 투자 -->
+          <div class="relative group">
+            <button class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-white transition flex items-center gap-1">
+              <span>투자·저축</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 group-hover:rotate-180 transition-transform"></i>
+            </button>
+            <div class="absolute left-0 mt-1 w-52 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 hidden group-hover:block z-50">
+              <button onclick="openCalc('compound')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-emerald-400 w-4"></i> 복리 투자 시뮬레이터
+              </button>
+              <button onclick="openCalc('stock')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-cyan-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-cyan-400 w-4"></i> 주식 물타기 평단가
+              </button>
+              <button onclick="openCalc('savings')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-blue-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-piggy-bank text-blue-400 w-4"></i> 예·적금 만기 수령액
+              </button>
+              <button onclick="openCalc('inflation')" class="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-slate-800 hover:text-rose-400 transition flex items-center gap-2">
+                <i class="fa-solid fa-arrow-trend-down text-rose-400 w-4"></i> 인플레이션 & 화폐가치
+              </button>
+            </div>
+          </div>
+
+          <!-- 드롭다운 4: 대출 -->
+          <button onclick="openCalc('loan')" class="px-3 py-1.5 rounded-lg hover:bg-slate-800 hover:text-purple-400 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-landmark text-purple-400 text-xs"></i> 대출 상환
+          </button>
+
+        </nav>
+
+        <!-- 모바일 전체보기 버튼 -->
+        <div class="md:hidden flex items-center">
+          <button onclick="showHub()" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1">
+            <i class="fa-solid fa-grid-2"></i> 전체
+          </button>
+        </div>
+
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="showHub()" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
-          <i class="fa-solid fa-grid-2 mr-1"></i> 전체 도구 모음
+
+      <!-- 하단 가로 스크롤 빠른 칩 바 (모바일 및 태블릿 최적화) -->
+      <div class="flex items-center gap-2 py-2 overflow-x-auto no-scrollbar border-t border-slate-800/60 text-xs whitespace-nowrap">
+        <button onclick="openCalc('news')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-newspaper text-emerald-400"></i> 뉴스 브리핑
+        </button>
+        <button onclick="openCalc('exchange')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-teal-500/20 text-slate-300 hover:text-teal-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-money-bill-transfer text-teal-400"></i> 실시간 환율
+        </button>
+        <button onclick="openCalc('salary')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-wallet text-amber-400"></i> 연봉 실수령액
+        </button>
+        <button onclick="openCalc('unemployment')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-hand-holding-dollar text-sky-400"></i> 실업급여
+        </button>
+        <button onclick="openCalc('severance')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-invoice-dollar text-indigo-400"></i> 퇴직금
+        </button>
+        <button onclick="openCalc('compound')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-emerald-500/20 text-slate-300 hover:text-emerald-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-line text-emerald-400"></i> 복리 투자
+        </button>
+        <button onclick="openCalc('stock')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-calculator text-cyan-400"></i> 주식 물타기
+        </button>
+        <button onclick="openCalc('loan')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-purple-500/20 text-slate-300 hover:text-purple-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-landmark text-purple-400"></i> 대출 상환
+        </button>
+        <button onclick="openCalc('savings')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-blue-500/20 text-slate-300 hover:text-blue-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-piggy-bank text-blue-400"></i> 예·적금
+        </button>
+        <button onclick="openCalc('inflation')" class="px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 border border-slate-700/60 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-trend-down text-rose-400"></i> 인플레이션
         </button>
       </div>
+
     </div>
   </header>
 
@@ -272,6 +387,7 @@
       document.getElementById('calc-detail-view').classList.add('hidden');
       if (activeChart) { activeChart.destroy(); activeChart = null; }
       if (newsObserver) { newsObserver.disconnect(); newsObserver = null; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function swapCurrencies() {
@@ -314,6 +430,7 @@
       document.getElementById('hub-view').classList.add('hidden');
       document.getElementById('calc-detail-view').classList.remove('hidden');
       const container = document.getElementById('calc-content');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // [뉴스 브리핑] -> SNS 피드형 무한 스크롤 처리
       if (type === 'news') {
