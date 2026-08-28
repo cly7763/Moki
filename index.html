@@ -65,16 +65,16 @@
         
         <!-- [신규 카드] 오늘의 금융 뉴스 브리핑 -->
         <div class="calc-card bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-6 rounded-2xl transition group cursor-pointer flex flex-col justify-between"
-             data-name="뉴스 기사 금융 경제 증시 시황 데일리 브리핑 요약" onclick="openCalc('news')">
+             data-name="뉴스 기사 금융 경제 증시 시황 데일리 브리핑 요약 피드" onclick="openCalc('news')">
           <div>
             <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition">
               <i class="fa-solid fa-newspaper"></i>
             </div>
             <div class="flex items-center gap-2 mb-1">
               <h3 class="text-lg font-bold text-white">오늘의 금융 뉴스 브리핑</h3>
-              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-semibold">DAILY</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-semibold">FEED</span>
             </div>
-            <p class="text-slate-400 text-xs leading-relaxed">매일 아침 주요 금융·경제 이슈와 핵심 헤드라인 요약을 한눈에 확인합니다.</p>
+            <p class="text-slate-400 text-xs leading-relaxed">매일 아침 주요 금융·경제 이슈와 핵심 헤드라인 요약을 SNS 피드처럼 확인합니다.</p>
           </div>
           <div class="mt-6 flex items-center justify-between text-xs text-emerald-400 font-semibold">
             <span>브리핑 읽기</span>
@@ -253,6 +253,12 @@
     let activeChart = null;
     let exchangeRatesCache = null;
 
+    // 무한 스크롤 관련 전역 상태
+    let allNewsArticles = [];
+    let loadedNewsCount = 0;
+    const PAGE_SIZE = 2; // 한 번에 렌더링할 기사 수 (2개씩)
+    let newsObserver = null;
+
     function filterCards() {
       const q = document.getElementById('calc-search').value.toLowerCase();
       document.querySelectorAll('.calc-card').forEach(card => {
@@ -265,6 +271,7 @@
       document.getElementById('hub-view').classList.remove('hidden');
       document.getElementById('calc-detail-view').classList.add('hidden');
       if (activeChart) { activeChart.destroy(); activeChart = null; }
+      if (newsObserver) { newsObserver.disconnect(); newsObserver = null; }
     }
 
     function swapCurrencies() {
@@ -278,46 +285,114 @@
       }
     }
 
+    // 다음 기사 묶음(배치)을 렌더링하는 함수
+    function renderNextNewsBatch() {
+      const container = document.getElementById('news-articles-list');
+      const sentinel = document.getElementById('news-scroll-sentinel');
+      if (!container || !sentinel) return;
+
+      const nextBatch = allNewsArticles.slice(loadedNewsCount, loadedNewsCount + PAGE_SIZE);
+      
+      nextBatch.forEach(articleEl => {
+        container.appendChild(articleEl.cloneNode(true));
+      });
+
+      loadedNewsCount += nextBatch.length;
+
+      // 모든 기사를 다 불러왔을 경우 관찰 중단 및 피드 종료 메시지 표시
+      if (loadedNewsCount >= allNewsArticles.length) {
+        if (newsObserver) newsObserver.disconnect();
+        sentinel.innerHTML = `
+          <div class="text-center py-6 text-xs text-slate-500 border-t border-slate-800/50">
+            <i class="fa-solid fa-check-circle mr-1 text-emerald-500"></i> 모든 최신 금융 브리핑을 다 읽었습니다.
+          </div>
+        `;
+      }
+    }
+
     async function openCalc(type) {
       document.getElementById('hub-view').classList.add('hidden');
       document.getElementById('calc-detail-view').classList.remove('hidden');
       const container = document.getElementById('calc-content');
 
-      // [뉴스 브리핑] -> news.html 파일을 비동기로 불러와 렌더링
+      // [뉴스 브리핑] -> SNS 피드형 무한 스크롤 처리
       if (type === 'news') {
         const todayDate = new Date().toISOString().slice(0, 10);
         container.innerHTML = `
           <div class="border-b border-slate-800 pb-5 mb-6">
             <div class="flex items-center gap-2 mb-2">
-              <span class="text-xs bg-emerald-500/20 text-emerald-400 font-mono font-semibold px-2 py-0.5 rounded">DAILY BRIEFING</span>
-              <span class="text-xs text-slate-500">기준일: <span id="news-date">${todayDate}</span></span>
+              <span class="text-xs bg-emerald-500/20 text-emerald-400 font-mono font-semibold px-2 py-0.5 rounded">DAILY FEED</span>
+              <span class="text-xs text-slate-500">오늘 기준: <span id="news-date">${todayDate}</span></span>
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-white"><i class="fa-solid fa-newspaper text-emerald-400 mr-2"></i>오늘의 주요 금융·경제 브리핑</h2>
-            <p class="text-slate-400 text-xs mt-1">매일 업데이트되는 핵심 경제 이슈 및 글로벌 증시·외환 시황 요약</p>
+            <p class="text-slate-400 text-xs mt-1">스크롤을 내리면 지난 날짜의 주요 경제 기사 브리핑이 자동으로 이어집니다.</p>
           </div>
-          <div id="news-body-wrapper" class="news-content-style">
-            <p class="text-slate-500 text-sm">기사를 불러오는 중입니다...</p>
+          
+          <div class="news-content-style">
+            <!-- 렌더링된 기사들이 담기는 컨테이너 -->
+            <div id="news-articles-list"></div>
+            
+            <!-- 스크롤 감지 센티넬(Sentinel) & 로딩 스피너 -->
+            <div id="news-scroll-sentinel" class="py-8 text-center text-xs text-slate-500">
+              <div class="inline-flex items-center gap-2 bg-slate-950 px-4 py-2 rounded-full border border-slate-800">
+                <i class="fa-solid fa-circle-notch fa-spin text-emerald-400"></i> 이전 기사 불러오는 중...
+              </div>
+            </div>
           </div>
         `;
 
         try {
-          // 캐시 방지를 위해 타임스탬프를 덧붙여 news.html 가져옴
           const res = await fetch('news.html?t=' + new Date().getTime());
           if (res.ok) {
-            const html = await res.text();
-            document.getElementById('news-body-wrapper').innerHTML = html;
+            const htmlText = await res.text();
+            
+            // 가상 돔에 기사 HTML 파싱
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(`<div>${htmlText}</div>`, 'text/html');
+            
+            // 기사 개별 블록(div 단위) 추출
+            allNewsArticles = Array.from(doc.body.firstElementChild.children).filter(el => el.tagName === 'DIV');
+            loadedNewsCount = 0;
+
+            if (allNewsArticles.length === 0) {
+              document.getElementById('news-articles-list').innerHTML = htmlText;
+              document.getElementById('news-scroll-sentinel').classList.add('hidden');
+              return;
+            }
+
+            // 첫 페이지(2개) 즉시 렌더링
+            renderNextNewsBatch();
+
+            // IntersectionObserver로 스크롤 감지 등록
+            const sentinel = document.getElementById('news-scroll-sentinel');
+            if (newsObserver) newsObserver.disconnect();
+            
+            newsObserver = new IntersectionObserver((entries) => {
+              entries.forEach(entry => {
+                if (entry.isIntersecting && loadedNewsCount < allNewsArticles.length) {
+                  // 부드러운 SNS 피드 느낌을 위한 살짝의 지연 로드
+                  setTimeout(() => {
+                    renderNextNewsBatch();
+                  }, 200);
+                }
+              });
+            }, { rootMargin: '150px' });
+
+            newsObserver.observe(sentinel);
+
           } else {
-            document.getElementById('news-body-wrapper').innerHTML = `
+            document.getElementById('news-articles-list').innerHTML = `
               <div class="p-4 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 text-sm">
                 <p>아직 등록된 <code>news.html</code> 파일이 없거나 기사를 불러올 수 없습니다.</p>
-                <p class="text-xs text-slate-500 mt-1">같은 폴더에 <code>news.html</code> 파일을 생성해 기사 HTML을 넣어주세요.</p>
               </div>
             `;
+            document.getElementById('news-scroll-sentinel').classList.add('hidden');
           }
         } catch (e) {
-          document.getElementById('news-body-wrapper').innerHTML = `
-            <p class="text-rose-400 text-xs">뉴스 파일을 불러오는 중 오류가 발생했습니다.</p>
+          document.getElementById('news-articles-list').innerHTML = `
+            <p class="text-rose-400 text-xs">뉴스 피드를 불러오는 중 오류가 발생했습니다.</p>
           `;
+          document.getElementById('news-scroll-sentinel').classList.add('hidden');
         }
         return;
       }
@@ -948,18 +1023,18 @@
 
   <style>
     .news-content-style img {
-  width: 100%;
-  height: auto;
-  border-radius: 0.75rem;
-  margin: 1.25rem 0 0.5rem 0;
-  border: 1px solid #334155;
-}
-.news-content-style figcaption {
-  text-align: center;
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-bottom: 1.25rem;
-}
+      width: 100%;
+      height: auto;
+      border-radius: 0.75rem;
+      margin: 1.25rem 0 0.5rem 0;
+      border: 1px solid #334155;
+    }
+    .news-content-style figcaption {
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-bottom: 1.25rem;
+    }
     .input-style {
       width: 100%;
       background-color: #020617;
